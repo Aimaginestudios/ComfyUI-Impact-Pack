@@ -395,9 +395,7 @@ class ImageListToImageBatch:
                         image2 = image2[:, :, :, :image1.shape[3]]
                     else:
                         # Pad with ones for missing channels
-                        padding = torch.ones(image2.shape[0], image2.shape[1], image2.shape[2], 
-                                            image1.shape[3] - image2.shape[3], 
-                                            device=image2.device, dtype=image2.dtype)
+                        padding = torch.ones(image2.shape[0], image2.shape[1], image2.shape[2], image1.shape[3] - image2.shape[3], device=image2.device, dtype=image2.dtype)
                         image2 = torch.cat([image2, padding], dim=3)
                 
                 image1 = torch.cat((image1, image2), dim=0)
