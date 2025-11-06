@@ -381,7 +381,25 @@ class ImageListToImageBatch:
             image1 = images[0]
             for image2 in images[1:]:
                 if image1.shape[1:] != image2.shape[1:]:
+                # Ensure image2 is on the same device as image1
+                image2 = image2.to(image1.device)
+                
+                # Handle spatial dimension mismatch
+                if image1.shape[1:3] != image2.shape[1:3]:
                     image2 = comfy.utils.common_upscale(image2.movedim(-1, 1), image1.shape[2], image1.shape[1], "lanczos", "center").movedim(1, -1)
+                
+                # Handle channel mismatch (e.g., RGB vs RGBA)
+                if image1.shape[3] != image2.shape[3]:
+                    if image2.shape[3] > image1.shape[3]:
+                        # Drop extra channels (e.g., RGBA -> RGB)
+                        image2 = image2[:, :, :, :image1.shape[3]]
+                    else:
+                        # Pad with ones for missing channels
+                        padding = torch.ones(image2.shape[0], image2.shape[1], image2.shape[2], 
+                                            image1.shape[3] - image2.shape[3], 
+                                            device=image2.device, dtype=image2.dtype)
+                        image2 = torch.cat([image2, padding], dim=3)
+                
                 image1 = torch.cat((image1, image2), dim=0)
             return (image1,)
 
